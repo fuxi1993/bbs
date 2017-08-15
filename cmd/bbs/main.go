@@ -302,6 +302,9 @@ func main() {
 	metricsTicker := clock.NewTicker(time.Duration(bbsConfig.ReportInterval))
 	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, metricsTicker, metronClient)
 
+	//this lien waits to new a k8s client
+	k8sclient := ;
+
 	handler := handlers.New(
 		logger,
 		accessLogger,
