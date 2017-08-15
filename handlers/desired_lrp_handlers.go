@@ -11,9 +11,15 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/rep"
 	"code.cloudfoundry.org/workpool"
+
+	k8smodel "github.com/ctchentao/k8sGoRestful/models"
+	"github.com/ctchentao/k8sGoRestful"
+	"fmt"
 )
 
 type DesiredLRPHandler struct {
+	k8sClient k8sGoRestful.Client
+
 	desiredLRPDB       db.DesiredLRPDB
 	actualLRPDB        db.ActualLRPDB
 	desiredHub         events.Hub
@@ -26,6 +32,8 @@ type DesiredLRPHandler struct {
 }
 
 func NewDesiredLRPHandler(
+	k8sClient k8sGoRestful.Client,
+
 	updateWorkersCount int,
 	desiredLRPDB db.DesiredLRPDB,
 	actualLRPDB db.ActualLRPDB,
@@ -37,6 +45,8 @@ func NewDesiredLRPHandler(
 	exitChan chan<- struct{},
 ) *DesiredLRPHandler {
 	return &DesiredLRPHandler{
+		k8sClient: k8sClient,
+
 		desiredLRPDB:       desiredLRPDB,
 		actualLRPDB:        actualLRPDB,
 		desiredHub:         desiredHub,
@@ -225,7 +235,25 @@ func (h *DesiredLRPHandler) RemoveDesiredLRP(logger lager.Logger, w http.Respons
 }
 
 func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper int32, schedulingInfo *models.DesiredLRPSchedulingInfo) {
-	logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
+
+	//we need to revise this code to our services
+	pods := &k8smodel.Pods{
+		Name: schedulingInfo.ProcessGuid,
+		Label: []k8smodel.Label{
+			{Name: "name", Value: "testapi"},
+			{Name: "company", Value: "IBM"},
+		},
+		Image: "nginx:1.7.9",
+		ContainPort: 12345,
+	}
+	b, err := h.k8sClient.CreatePods("default", pods)
+	if b {
+		fmt.Println("create pods successfully!")
+	} else {
+		fmt.Println(err)
+	}
+
+	/*logger = logger.Session("start-instance-range", lager.Data{"lower": lower, "upper": upper})
 	logger.Info("starting")
 	defer logger.Info("complete")
 
@@ -245,7 +273,7 @@ func (h *DesiredLRPHandler) startInstanceRange(logger lager.Logger, lower, upper
 	logger.Info("finished-lrp-auction-request", lager.Data{"app_guid": schedulingInfo.ProcessGuid, "indices": createdIndices})
 	if err != nil {
 		logger.Error("failed-to-request-auction", err)
-	}
+	}*/
 }
 
 func (h *DesiredLRPHandler) createUnclaimedActualLRPs(logger lager.Logger, keys []*models.ActualLRPKey) []int {
