@@ -18,11 +18,16 @@ import (
 	"code.cloudfoundry.org/rep"
 	"github.com/gogo/protobuf/proto"
 	"github.com/tedsuo/rata"
+
+	"github.com/ctchentao/k8sGoRestful"
 )
 
 func New(
 	logger,
 	accessLogger lager.Logger,
+
+	k8sclient k8sGoRestful.Client,
+
 	updateWorkers int,
 	convergenceWorkersSize int,
 	emitter middleware.Emitter,
@@ -41,7 +46,7 @@ func New(
 	actualLRPController := controllers.NewActualLRPLifecycleController(db, db, db, auctioneerClient, serviceClient, repClientFactory, actualHub)
 	actualLRPLifecycleHandler := NewActualLRPLifecycleHandler(actualLRPController, exitChan)
 	evacuationHandler := NewEvacuationHandler(db, db, db, actualHub, auctioneerClient, exitChan)
-	desiredLRPHandler := NewDesiredLRPHandler(updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
+	desiredLRPHandler := NewDesiredLRPHandler(k8sclient, updateWorkers, db, db, desiredHub, actualHub, auctioneerClient, repClientFactory, serviceClient, exitChan)
 	taskController := controllers.NewTaskController(db, taskCompletionClient, auctioneerClient, serviceClient, repClientFactory, taskHub)
 	taskHandler := NewTaskHandler(taskController, exitChan)
 	eventsHandler := NewEventHandler(desiredHub, actualHub)
