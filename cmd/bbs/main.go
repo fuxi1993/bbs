@@ -15,24 +15,24 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/auctioneer"
-	"code.cloudfoundry.org/bbs/cmd/bbs/config"
-	"code.cloudfoundry.org/bbs/controllers"
-	"code.cloudfoundry.org/bbs/converger"
-	"code.cloudfoundry.org/bbs/db"
-	etcddb "code.cloudfoundry.org/bbs/db/etcd"
-	"code.cloudfoundry.org/bbs/db/migrations"
-	"code.cloudfoundry.org/bbs/db/sqldb"
-	"code.cloudfoundry.org/bbs/encryption"
-	"code.cloudfoundry.org/bbs/encryptor"
-	"code.cloudfoundry.org/bbs/events"
-	"code.cloudfoundry.org/bbs/format"
-	"code.cloudfoundry.org/bbs/guidprovider"
-	"code.cloudfoundry.org/bbs/handlers"
-	"code.cloudfoundry.org/bbs/metrics"
-	"code.cloudfoundry.org/bbs/migration"
-	"code.cloudfoundry.org/bbs/models"
-	"code.cloudfoundry.org/bbs/serviceclient"
-	"code.cloudfoundry.org/bbs/taskworkpool"
+	"github.com/fuxi1993/bbs/cmd/bbs/config"
+	"github.com/fuxi1993/bbs/controllers"
+	"github.com/fuxi1993/bbs/converger"
+	"github.com/fuxi1993/bbs/db"
+	etcddb "github.com/fuxi1993/bbs/db/etcd"
+	"github.com/fuxi1993/bbs/db/migrations"
+	"github.com/fuxi1993/bbs/db/sqldb"
+	"github.com/fuxi1993/bbs/encryption"
+	"github.com/fuxi1993/bbs/encryptor"
+	"github.com/fuxi1993/bbs/events"
+	"github.com/fuxi1993/bbs/format"
+	"github.com/fuxi1993/bbs/guidprovider"
+	"github.com/fuxi1993/bbs/handlers"
+	"github.com/fuxi1993/bbs/metrics"
+	"github.com/fuxi1993/bbs/migration"
+	"github.com/fuxi1993/bbs/models"
+	"github.com/fuxi1993/bbs/serviceclient"
+	"github.com/fuxi1993/bbs/taskworkpool"
 	"code.cloudfoundry.org/cfhttp"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/consuladapter"
@@ -57,6 +57,7 @@ import (
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
 	"github.com/tedsuo/ifrit/sigmon"
+	"github.com/ctchentao/k8sGoRestful"
 )
 
 var configFilePath = flag.String(
@@ -303,11 +304,12 @@ func main() {
 	requestStatMetronNotifier := metrics.NewRequestStatMetronNotifier(logger, metricsTicker, metronClient)
 
 	//this lien waits to new a k8s client
-	k8sclient := ;
+	k8sclient := k8sGoRestful.NewClient("http://172.27.35.4:8080")
 
 	handler := handlers.New(
 		logger,
 		accessLogger,
+		k8sclient,
 		bbsConfig.UpdateWorkers,
 		bbsConfig.ConvergenceWorkers,
 		requestStatMetronNotifier,
